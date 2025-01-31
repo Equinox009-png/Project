@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Quiz Platform by Jyoti</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            text-align: center;
+            background-color: #1a1a1a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+        .container {
+            width: 80%;
+            max-width: 800px;
+            background: #2c2c2c;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        .hidden {
+            display: none;
+        }
+        button {
+            padding: 14px 24px;
+            margin: 15px;
+            background: #6a0dad;  /* Light purple */
+            color: white;
+            border: 2px solid #6a0dad;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.3s;
+            font-size: 18px;
+        }
+        button:hover {
+            background: #4b0082;  /* Dark purple */
+            color: white;
+        }
+        #options button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 14px;
+            font-size: 18px;
+            background: #6a0dad;  /* Light purple */
+            color: white;
+            border: 2px solid #6a0dad;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+        #options button:hover {
+            background: #4b0082;  /* Dark purple */
+            color: white;
+        }
+        h1 {
+            color: #6a0dad;
+            margin-bottom: 30px;
+            font-size: 36px;
+        }
+        h2, h3 {
+            color: #b75af7;
+            margin-bottom: 20px;
+        }
+        #result h3 {
+            font-size: 24px;
+            margin-top: 30px;
+        }
+        .correct {
+            border-left: 5px solid #28a745; /* Green border for correct answer */
+            background-color: #333;
+            color: #28a745;
+        }
+        .incorrect {
+            border-left: 5px solid #dc3545; /* Red border for incorrect answer */
+            background-color: #333;
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+<h1>Welcome to the Online Quiz Platform</h1>
+<div class="container">
+    <h2>Online Quiz Platform by Jyoti</h2>
+    <button onclick="startQuiz('sports')">Sports</button>
+    <button onclick="startQuiz('current_affairs')">Current Affairs</button>
+    <button onclick="startQuiz('capitals')">Country Capitals</button>
+
+    <div id="quiz" class="hidden">
+        <h3 id="question"></h3>
+        <div id="options"></div>
+        <button onclick="nextQuestion()">Next</button>
+    </div>
+    <div id="result" class="hidden">
+        <h3>Your Score: <span id="score"></span>/5</h3>
+        <button onclick="location.reload()">Retry</button>
+    </div>
+</div>
+
+<script>
+    const questions = {
+        sports: [
+            { q: "Who won the 2022 FIFA World Cup?", options: ["Argentina", "France", "Brazil", "Germany"], answer: "Argentina" },
+            { q: "Who is known as the ‘King of Clay’ in Tennis?", options: ["Novak Djokovic", "Roger Federer", "Rafael Nadal", "Andy Murray"], answer: "Rafael Nadal" },
+            { q: "Which country has won the most Cricket World Cups?", options: ["India", "Australia", "England", "West Indies"], answer: "Australia" },
+            { q: "Which NBA team won the most championships?", options: ["Los Angeles Lakers", "Chicago Bulls", "Boston Celtics", "Miami Heat"], answer: "Boston Celtics" },
+            { q: "Who holds the record for the most Olympic gold medals?", options: ["Usain Bolt", "Michael Phelps", "Carl Lewis", "Mark Spitz"], answer: "Michael Phelps" }
+        ],
+        current_affairs: [
+            { q: "Who is the current UN Secretary-General?", options: ["Ban Ki-moon", "António Guterres", "Kofi Annan", "Javier Pérez de Cuéllar"], answer: "António Guterres" },
+            { q: "Which country hosted the 2023 G20 Summit?", options: ["USA", "India", "China", "UK"], answer: "India" },
+            { q: "Which tech company recently launched ChatGPT?", options: ["Google", "Apple", "OpenAI", "Microsoft"], answer: "OpenAI" },
+            { q: "Which country recently landed on the moon's south pole?", options: ["USA", "Russia", "China", "India"], answer: "India" },
+            { q: "Who won the 2023 Nobel Prize in Physics?", options: ["Pierre Agostini", "Roger Penrose", "Albert Fert", "Donna Strickland"], answer: "Pierre Agostini" }
+        ],
+        capitals: [
+            { q: "What is the capital of Japan?", options: ["Tokyo", "Seoul", "Beijing", "Bangkok"], answer: "Tokyo" },
+            { q: "What is the capital of Canada?", options: ["Toronto", "Vancouver", "Montreal", "Ottawa"], answer: "Ottawa" },
+            { q: "What is the capital of Brazil?", options: ["Rio de Janeiro", "Brasilia", "São Paulo", "Buenos Aires"], answer: "Brasilia" },
+            { q: "What is the capital of South Africa?", options: ["Cape Town", "Johannesburg", "Pretoria", "Durban"], answer: "Pretoria" },
+            { q: "What is the capital of Australia?", options: ["Sydney", "Melbourne", "Canberra", "Brisbane"], answer: "Canberra" }
+        ]
+    };
+
+    let currentCategory = '';
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    function startQuiz(category) {
+        currentCategory = category;
+        currentQuestionIndex = 0;
+        score = 0;
+        document.querySelector("#quiz").classList.remove("hidden");
+        document.querySelector("#result").classList.add("hidden");
+        document.querySelector("#question").textContent = "";
+        document.querySelector("#options").innerHTML = "";
+        displayQuestion();
+    }
+
+    function displayQuestion() {
+        const questionData = questions[currentCategory][currentQuestionIndex];
+        document.querySelector("#question").textContent = questionData.q;
+        const optionsContainer = document.querySelector("#options");
+        optionsContainer.innerHTML = ''; // Clear previous options
+        questionData.options.forEach(option => {
+            const button = document.createElement("button");
+            button.textContent = option;
+            button.onclick = () => checkAnswer(button, option);
+            optionsContainer.appendChild(button);
+        });
+    }
+
+    function checkAnswer(button, selectedOption) {
+        const correctAnswer = questions[currentCategory][currentQuestionIndex].answer;
+
+        // Add the pointer indicator for the correct or incorrect option
+        if (selectedOption === correctAnswer) {
+            button.classList.add("correct");
+            score++;
+        } else {
+            button.classList.add("incorrect");
+        }
+
+        // Disable all buttons after answering
+        const allButtons = document.querySelectorAll("#options button");
+        allButtons.forEach(btn => btn.disabled = true);
+
+        // Proceed to the next question after a short delay
+        setTimeout(() => {
+            nextQuestion();
+        }, 1000); // Delay for 1 second before moving to the next question
+    }
+
+    function nextQuestion() {
+        if (currentQuestionIndex < questions[currentCategory].length - 1) {
+            currentQuestionIndex++;
+            displayQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.querySelector("#quiz").classList.add("hidden");
+        document.querySelector("#result").classList.remove("hidden");
+        document.querySelector("#score").textContent = score;
+    }
+</script>
+</body>
+</html>
